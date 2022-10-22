@@ -67,7 +67,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[hasher.finish() as usize % self.buckets.len()].read() {
+        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].read() {
             Ok(bucket) => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
@@ -88,7 +88,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].write() {
             Ok(bucket) => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
@@ -109,7 +109,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
@@ -132,7 +132,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
@@ -153,7 +153,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[hasher.finish() as usize % self.buckets.len()].read() {
+        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].read() {
             Ok(bucket) => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
