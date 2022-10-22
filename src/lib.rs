@@ -3,8 +3,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::sync::{atomic, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::sync::atomic::AtomicUsize;
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 pub struct ReadGuard<'a,K,V> {
     locked_bucket:RwLockReadGuard<'a, Vec<(K,V)>>,
@@ -51,12 +50,12 @@ impl<'a,K,V> DerefMut for WriteGuard<'a,K,V> {
     }
 }
 pub struct ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
-    buckets:Vec<(RwLock<Vec<(K,V)>>,AtomicUsize)>,
+    buckets:Vec<RwLock<Vec<(K,V)>>>,
 }
 impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
     pub fn with_size(size:usize) -> ConcurrentFixedHashMap<K,V> {
         let mut buckets = Vec::with_capacity(size);
-        buckets.resize_with(size,|| (RwLock::default(),AtomicUsize::new(0)));
+        buckets.resize_with(size,RwLock::default);
 
         ConcurrentFixedHashMap {
             buckets:buckets,
@@ -70,22 +69,18 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
-        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
-            None
-        } else {
-            match self.buckets[index].0.read() {
-                Ok(bucket) => {
-                    for i in 0..bucket.len() {
-                        if k == &bucket[i].0 {
-                            return Some(ReadGuard::new(bucket, i));
-                        }
+        match self.buckets[index].read() {
+            Ok(bucket) => {
+                for i in 0..bucket.len() {
+                    if k == &bucket[i].0 {
+                        return Some(ReadGuard::new(bucket, i));
                     }
-
-                    None
-                },
-                Err(e) => {
-                    panic!("{}", e);
                 }
+
+                None
+            },
+            Err(e) => {
+                panic!("{}", e);
             }
         }
     }
@@ -97,22 +92,18 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
-        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
-            None
-        } else {
-            match self.buckets[index].0.write() {
-                Ok(bucket) => {
-                    for i in 0..bucket.len() {
-                        if k == &bucket[i].0 {
-                            return Some(WriteGuard::new(bucket, i));
-                        }
+        match self.buckets[index].write() {
+            Ok(bucket) => {
+                for i in 0..bucket.len() {
+                    if k == &bucket[i].0 {
+                        return Some(WriteGuard::new(bucket, i));
                     }
-
-                    None
-                },
-                Err(e) => {
-                    panic!("{}", e);
                 }
+
+                None
+            },
+            Err(e) => {
+                panic!("{}", e);
             }
         }
     }
@@ -124,15 +115,13 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
-        match self.buckets[index].0.write() {
+        match self.buckets[index].write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
                         return Some(mem::replace(&mut bucket[i].1,value));
                     }
                 }
-
-                self.buckets[index].1.fetch_add(1,atomic::Ordering::Release);
 
                 bucket.push((k,value));
 
@@ -151,15 +140,13 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
-        match self.buckets[index].0.write() {
+        match self.buckets[index].write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
                         return;
                     }
                 }
-
-                self.buckets[index].1.fetch_add(1,atomic::Ordering::Release);
 
                 bucket.push((k,value));
             },
@@ -176,22 +163,18 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
-        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
-            false
-        } else {
-            match self.buckets[index].0.read() {
-                Ok(bucket) => {
-                    for i in 0..bucket.len() {
-                        if k == &bucket[i].0 {
-                            return true;
-                        }
+        match self.buckets[index].read() {
+            Ok(bucket) => {
+                for i in 0..bucket.len() {
+                    if k == &bucket[i].0 {
+                        return true;
                     }
-
-                    return false;
-                },
-                Err(e) => {
-                    panic!("{}", e);
                 }
+
+                return false;
+            },
+            Err(e) => {
+                panic!("{}", e);
             }
         }
     }
