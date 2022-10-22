@@ -178,8 +178,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
             false
-        } else if self.buckets[index].1.load(atomic::Ordering::Acquire) == 1 {
-            true
         } else {
             match self.buckets[index].0.read() {
                 Ok(bucket) => {
