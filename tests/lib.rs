@@ -186,6 +186,6 @@ fn test_insert_and_get_mut_and_conatins() {
     for (i,h) in (1..11).zip(handlers.into_iter()) {
         h.join().unwrap();
 
-        assert!(map.contains(&(100 * i, 1000 * i, 10000 * i)));
+        assert!(map.contains_key(&(100 * i, 1000 * i, 10000 * i)));
     }
 }

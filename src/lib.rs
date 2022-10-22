@@ -148,7 +148,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         }
     }
 
-    pub fn contains<Q: ?Sized>(&self,k: &Q) -> bool where K: Borrow<Q>, Q: Hash + Eq + PartialEq<K> {
+    pub fn contains_key<Q: ?Sized>(&self,k: &Q) -> bool where K: Borrow<Q>, Q: Hash + Eq + PartialEq<K> {
         let mut hasher = DefaultHasher::default();
 
         k.hash(&mut hasher);
