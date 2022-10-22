@@ -1,6 +1,7 @@
 use std::borrow::Borrow;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
@@ -75,6 +76,92 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 }
 
                 None
+            },
+            Err(e) => {
+                panic!("{}",e);
+            }
+        }
+    }
+
+    pub fn get_mut<Q: ?Sized>(&self,k: &Q) -> Option<WriteGuard<'_,K,V>> where K: Borrow<Q>, Q: Hash + Eq + PartialEq<K> {
+        let mut hasher = DefaultHasher::default();
+
+        k.hash(&mut hasher);
+
+        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+            Ok(bucket) => {
+                for i in 0..bucket.len() {
+                    if k == &bucket[i].0 {
+                        return Some(WriteGuard::new(bucket,i));
+                    }
+                }
+
+                None
+            },
+            Err(e) => {
+                panic!("{}",e);
+            }
+        }
+    }
+
+    pub fn insert(&self,k: K, value:V) -> Option<V> {
+        let mut hasher = DefaultHasher::default();
+
+        k.hash(&mut hasher);
+
+        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+            Ok(mut bucket) => {
+                for i in 0..bucket.len() {
+                    if k == bucket[i].0 {
+                        return Some(mem::replace(&mut bucket[i].1,value));
+                    }
+                }
+
+                bucket.push((k,value));
+
+                None
+            },
+            Err(e) => {
+                panic!("{}",e);
+            }
+        }
+    }
+
+    pub fn insert_new(&self,k: K, value:V) {
+        let mut hasher = DefaultHasher::default();
+
+        k.hash(&mut hasher);
+
+        match self.buckets[hasher.finish() as usize % self.buckets.len()].write() {
+            Ok(mut bucket) => {
+                for i in 0..bucket.len() {
+                    if k == bucket[i].0 {
+                        return;
+                    }
+                }
+
+                bucket.push((k,value));
+            },
+            Err(e) => {
+                panic!("{}",e);
+            }
+        }
+    }
+
+    pub fn contains<Q: ?Sized>(&self,k: &Q) -> bool where K: Borrow<Q>, Q: Hash + Eq + PartialEq<K> {
+        let mut hasher = DefaultHasher::default();
+
+        k.hash(&mut hasher);
+
+        match self.buckets[hasher.finish() as usize % self.buckets.len()].read() {
+            Ok(bucket) => {
+                for i in 0..bucket.len() {
+                    if k == &bucket[i].0 {
+                        return true;
+                    }
+                }
+
+                return false;
             },
             Err(e) => {
                 panic!("{}",e);
