@@ -7,7 +7,7 @@ use concurrent_fixed_hashmap::ConcurrentFixedHashMap;
 fn test_insert_and_get() {
     let mut handlers = Vec::new();
 
-    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 27));
+    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 19));
 
     for i in 1..11 {
         let map = Arc::clone(&map);
@@ -35,7 +35,7 @@ fn test_insert_and_get() {
 fn test_insert_and_get_mut() {
     let mut handlers = Vec::new();
 
-    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 27));
+    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 19));
 
     for i in 1..11 {
         let map = Arc::clone(&map);
@@ -79,7 +79,7 @@ fn test_insert_and_get_mut() {
 fn test_insert_new_and_get() {
     let mut handlers = Vec::new();
 
-    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 27));
+    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 19));
 
     for i in 1..11 {
         let map = Arc::clone(&map);
@@ -107,7 +107,7 @@ fn test_insert_new_and_get() {
 fn test_insert_and_insert_new_and_get() {
     let mut handlers = Vec::new();
 
-    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 27));
+    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 19));
 
     for i in 1..11 {
         let map = Arc::clone(&map);
@@ -153,7 +153,7 @@ fn test_insert_and_insert_new_and_get() {
 fn test_insert_and_get_mut_and_conatins() {
     let mut handlers = Vec::new();
 
-    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 27));
+    let map = Arc::new(ConcurrentFixedHashMap::with_size(1 << 19));
 
     for i in 1..11 {
         let map = Arc::clone(&map);
