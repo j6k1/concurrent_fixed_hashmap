@@ -132,7 +132,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                     }
                 }
 
-                self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.fetch_add(1,atomic::Ordering::Release);
+                self.buckets[index].1.fetch_add(1,atomic::Ordering::Release);
 
                 bucket.push((k,value));
 
@@ -159,7 +159,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                     }
                 }
 
-                self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.fetch_add(1,atomic::Ordering::Release);
+                self.buckets[index].1.fetch_add(1,atomic::Ordering::Release);
 
                 bucket.push((k,value));
             },
