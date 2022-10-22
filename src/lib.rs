@@ -68,10 +68,12 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        if self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.load(atomic::Ordering::Acquire) == 0 {
+        let index = (hasher.finish() % self.buckets.len() as u64) as usize;
+
+        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
             None
         } else {
-            match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].0.read() {
+            match self.buckets[index].0.read() {
                 Ok(bucket) => {
                     for i in 0..bucket.len() {
                         if k == &bucket[i].0 {
@@ -93,10 +95,12 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        if self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.load(atomic::Ordering::Acquire) == 0 {
+        let index = (hasher.finish() % self.buckets.len() as u64) as usize;
+
+        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
             None
         } else {
-            match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].0.write() {
+            match self.buckets[index].0.write() {
                 Ok(bucket) => {
                     for i in 0..bucket.len() {
                         if k == &bucket[i].0 {
@@ -118,7 +122,9 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].0.write() {
+        let index = (hasher.finish() % self.buckets.len() as u64) as usize;
+
+        match self.buckets[index].0.write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
@@ -143,7 +149,9 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].0.write() {
+        let index = (hasher.finish() % self.buckets.len() as u64) as usize;
+
+        match self.buckets[index].0.write() {
             Ok(mut bucket) => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
@@ -166,12 +174,14 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
 
         k.hash(&mut hasher);
 
-        if self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.load(atomic::Ordering::Acquire) == 0 {
+        let index = (hasher.finish() % self.buckets.len() as u64) as usize;
+
+        if self.buckets[index].1.load(atomic::Ordering::Acquire) == 0 {
             false
-        } else if self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].1.load(atomic::Ordering::Acquire) == 1 {
+        } else if self.buckets[index].1.load(atomic::Ordering::Acquire) == 1 {
             true
         } else {
-            match self.buckets[(hasher.finish() % self.buckets.len() as u64) as usize].0.read() {
+            match self.buckets[index].0.read() {
                 Ok(bucket) => {
                     for i in 0..bucket.len() {
                         if k == &bucket[i].0 {
