@@ -1,9 +1,11 @@
+extern crate parking_lot;
+
 use std::borrow::Borrow;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 pub struct ReadGuard<'a,K,V> {
     locked_bucket:RwLockReadGuard<'a, Vec<(K,V)>>,
@@ -70,7 +72,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
         match self.buckets[index].read() {
-            Ok(bucket) => {
+            bucket => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
                         return Some(ReadGuard::new(bucket, i));
@@ -78,9 +80,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 }
 
                 None
-            },
-            Err(e) => {
-                panic!("{}", e);
             }
         }
     }
@@ -93,7 +92,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
         match self.buckets[index].write() {
-            Ok(bucket) => {
+            bucket => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
                         return Some(WriteGuard::new(bucket, i));
@@ -101,9 +100,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 }
 
                 None
-            },
-            Err(e) => {
-                panic!("{}", e);
             }
         }
     }
@@ -116,7 +112,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
         match self.buckets[index].write() {
-            Ok(mut bucket) => {
+            mut bucket => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
                         return Some(mem::replace(&mut bucket[i].1,value));
@@ -126,9 +122,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 bucket.push((k,value));
 
                 None
-            },
-            Err(e) => {
-                panic!("{}",e);
             }
         }
     }
@@ -141,7 +134,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
         match self.buckets[index].write() {
-            Ok(mut bucket) => {
+            mut bucket => {
                 for i in 0..bucket.len() {
                     if k == bucket[i].0 {
                         return;
@@ -149,9 +142,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 }
 
                 bucket.push((k,value));
-            },
-            Err(e) => {
-                panic!("{}",e);
             }
         }
     }
@@ -164,7 +154,7 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
         let index = (hasher.finish() % self.buckets.len() as u64) as usize;
 
         match self.buckets[index].read() {
-            Ok(bucket) => {
+            bucket => {
                 for i in 0..bucket.len() {
                     if k == &bucket[i].0 {
                         return true;
@@ -172,9 +162,6 @@ impl<K,V> ConcurrentFixedHashMap<K,V> where K: Hash + Eq {
                 }
 
                 return false;
-            },
-            Err(e) => {
-                panic!("{}", e);
             }
         }
     }
